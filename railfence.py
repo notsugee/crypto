@@ -1,50 +1,58 @@
 import numpy as np 
 
-key = 4312567
 plaintext = "attack postponed until two am"
+rails = 3
 
-def rail_fence(key, plaintext):
-    # prepping variables
-    plaintext = plaintext.replace(" ", "")
-    key_list = [int(i) for i in str(key)]
-    sorted_key_list = sorted(key_list)
+plaintext = plaintext.replace(" ", "")
+length = len(plaintext)
 
-    remainder = len(plaintext) % len(key_list)
-    if remainder != 0:
-        number_of_extra_chars = len(key_list) - remainder
-        for i in range(123-number_of_extra_chars, 123):
-            plaintext += chr(i)
-    
-    print(plaintext)
+fence = np.empty((rails, length), dtype=str)
 
-    # encryption
-    cols = len(key_list)
-    rows = len(plaintext) // cols 
-    rect = np.array([letter for letter in plaintext]).reshape(rows, cols)
-    print(rect)
-    
-    ciphertext = ""
-    for number in sorted_key_list:
-        col_index = key_list.index(number)
-        ciphertext += "".join(list(rect[:,col_index]))
+row = 0
+down = True
 
-    print(ciphertext)
-    
-    # decryption
-    plaintext = ""
-    rect2 = np.empty((rows, cols), dtype=str)
-    index = 0
-    for number in sorted_key_list:
-        col_index = key_list.index(number)
-        rect2[:, col_index] = list(ciphertext[index:index + rows])
-        index += rows
+for col in range(length):
+    fence[row][col] = plaintext[col]
+    if row == 0:
+        down = True
+    elif row == rails - 1:
+        down = False
+    row += 1 if down else -1
 
-    plaintext = "".join(rect2.flatten())
-    print(rect2)
-    
-    print(plaintext[0:len(plaintext) - number_of_extra_chars])
-def main():
-    rail_fence(key, plaintext)
+print(fence)
+ciphertext = ""
+col_index = 0
+i=0
+ciphertext = "".join(fence.flatten())
+print(ciphertext)
 
-if __name__ == "__main__":
-    main()
+fenceD = np.empty((rails, length), dtype=str)
+row = 0
+down = True 
+for col in range(length):
+    fenceD[row][col] = '*'
+    if row == 0:
+        down = True
+    elif row == rails - 1:
+        down = False 
+    row += 1 if down else -1
+
+positions = np.argwhere(fenceD == '*')
+chars = list(ciphertext)
+
+for (r,c), char in zip(positions, chars):
+    fenceD[r][c] = char 
+print(fenceD)
+
+plaintext = ""
+row = 0
+down = True 
+for col in range(length):
+    plaintext += fenceD[row][col]
+    if row == 0:
+        down = True
+    elif row == rails - 1:
+        down = False 
+    row += 1 if down else -1
+
+print(plaintext)
